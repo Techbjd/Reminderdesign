@@ -1,17 +1,14 @@
 import React, { useContext, useState } from "react";
 import CalendarGrid from "./calendar";
 import { motion, AnimatePresence } from "framer-motion";
-import Modal from "react-modal";
 import ReminderForm from "./ReminderForm";
 import { ReminderContext } from "../context/ReminderContext";
 
-Modal.setAppElement("#root");
-
-function Eventsuser() {
+export default function Eventsuser() {
   const { reminders, loading, deleteReminder, setReminders } = useContext(ReminderContext);
-
+console.log(reminders)
   const [selectedDate, setSelectedDate] = useState(null);
-  const [modalOpen, setModalOpen] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
   const [editing, setEditing] = useState(null);
   const [activeMenu, setActiveMenu] = useState(null);
@@ -19,33 +16,35 @@ function Eventsuser() {
   // Filter reminders for selected date
   const filteredReminders = selectedDate
     ? reminders.filter((r) => {
-      const start = new Date(r.start_date);
-      const end = new Date(r.end_date || r.start_date);
-      const selected = new Date(selectedDate);
-      start.setHours(0, 0, 0, 0);
-      end.setHours(23, 59, 59, 999);
-      selected.setHours(12, 0, 0, 0);
-      return selected >= start && selected <= end;
-    })
+        const start = new Date(r.start_date);
+        const end = new Date(r.end_date || r.start_date);
+        const selected = new Date(selectedDate);
+        start.setHours(0, 0, 0, 0);
+        end.setHours(23, 59, 59, 999);
+        selected.setHours(12, 0, 0, 0);
+        return selected >= start && selected <= end;
+      })
     : reminders;
 
-  const openReminderForm = () => {
+  const openDrawer = () => {
     setEditing(null);
-    setModalOpen(true);
+    setDrawerOpen(true);
   };
-  const closeReminderForm = () => setModalOpen(false);
+
+  const closeDrawer = () => setDrawerOpen(false);
 
   const handleNotification = (msg) => {
-    setModalOpen(false);
+    setDrawerOpen(false);
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3000);
   };
 
   return (
-    <div className="p-4 bg-white/30 min-h-screen">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div className="p-4 min-h-screen flex flex-col lg:flex-row gap-6">
+      {/* Left Side: Calendar and Reminders List */}
+      <div className="flex-1 flex flex-col gap-6">
         {/* Calendar Section */}
-        <div className="rounded-xl flex flex-col w-full p-3 bg-gradient-to-b from-pink-500 to-purple-800">
+        <div className="rounded-xl flex flex-col w-full p-3 bg-slate-900/20">
           <h2 className="text-xl font-semibold text-white mb-4 text-center lg:text-left">
             Calendar
           </h2>
@@ -55,13 +54,13 @@ function Eventsuser() {
           />
         </div>
 
-        {/* Reminders Section */}
+        {/* Filtered Reminders Section */}
         <div className="rounded-xl shadow p-4 flex flex-col bg-white">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-bold text-gray-800">Reminders</h2>
             <button
-              onClick={openReminderForm}
-              className="bg-pink-500 hover:bg-pink-600 text-white font-semibold px-4 py-2 rounded-lg"
+              onClick={openDrawer}
+              className="bg-orange-400 hover:bg-orange-500 text-white font-semibold px-4 py-2 rounded-lg"
             >
               ADD Reminder
             </button>
@@ -122,14 +121,13 @@ function Eventsuser() {
                         ⋮
                       </button>
 
-                      {/* Popup menu card */}
                       {activeMenu === r.id && (
                         <div className="absolute right-0 mt-2 w-36 bg-white rounded-xl shadow-xl border border-gray-100 z-10">
                           <button
                             className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                             onClick={() => {
                               setEditing(r);
-                              setModalOpen(true);
+                              setDrawerOpen(true);
                               setActiveMenu(null);
                             }}
                           >
@@ -156,23 +154,47 @@ function Eventsuser() {
         </div>
       </div>
 
-      {/* Modal */}
-      <Modal
-        isOpen={modalOpen}
-        onRequestClose={closeReminderForm}
-        contentLabel="Add/Edit Reminder"
-        className="max-w-lg mx-auto mt-20 p-6 bg-white rounded-xl shadow-lg outline-none"
-        overlayClassName="fixed inset-0 bg-black/50 flex justify-center items-start z-50"
-      >
-        <ReminderForm
-          editing={editing}
-          setEditing={setEditing}
-          onClose={closeReminderForm}
-          selectedDate={selectedDate}
-          onNotify={handleNotification}
-          setReminders={setReminders}
-        />
-      </Modal>
+      {/* Right Drawer */}
+      <AnimatePresence>
+        {drawerOpen && (
+          <>
+            <motion.div
+              className="fixed inset-0 bg-black/40 z-40"
+              onClick={closeDrawer}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            />
+            <motion.div
+              className="fixed top-0 right-0 h-full w-full md:w-96 bg-white shadow-xl z-50 flex flex-col overflow-y-auto"
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "tween", duration: 0.3 }}
+            >
+              <div className="p-6 flex justify-between items-center border-b border-gray-200">
+                <h2 className="text-xl font-bold">
+                  {editing ? "Edit Reminder" : "Add Reminder"}
+                </h2>
+                <button
+                  className="text-gray-600 hover:text-gray-900 font-bold"
+                  onClick={closeDrawer}
+                >
+                  ✖
+                </button>
+              </div>
+              <div className="p-6 flex-1">
+                <ReminderForm
+                  editing={editing}
+                  setEditing={setEditing}
+                  onNotify={handleNotification}
+                  setReminders={setReminders}
+                />
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* Toast */}
       {toastMessage && (
@@ -189,5 +211,3 @@ function Eventsuser() {
     </div>
   );
 }
-
-export default Eventsuser;

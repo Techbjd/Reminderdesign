@@ -5,13 +5,14 @@ import Eventpage from "./page/Eventpage";
 import Dashboard from "./components/Dashboard";
 import LoginForm from "./components/LoginForm";
 import Eventsuser from "./components/Events";
-import CalendarPage from "./components/calendar";
+import CalendarGrid from "./components/calendar";
+import CalendarPage from "./page/CalendarPage";
 import { AuthProvider } from "../src/context/AuthProvider";
 import { ReminderProvider } from "./context/ReminderProvider";
 import ReminderPage from "./page/ReminderPage";
 import PrivateRoute from "./components/PrivateRoute"; // <-- import it
 import TimeSheets from "./page/TimeSheets";
-
+import Assets from "./page/Assets"
 function App() {
   return (
     <AuthProvider>
@@ -46,7 +47,16 @@ function App() {
                     <CalendarPage />
                   </PrivateRoute>
                 }
-              />
+                />
+
+              <Route
+                path="/Assets"
+                element={
+                  <PrivateRoute>
+                    <Assets />
+                  </PrivateRoute>
+                }
+                />
               <Route
                 path="/events"
                 element={

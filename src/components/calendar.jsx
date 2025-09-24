@@ -1,116 +1,106 @@
-import React, { useState } from "react";
+import { useState } from "react";
 
-const months = [
-  "JAN","FEB","MAR","APR","MAY","JUN",
-  "JUL","AUG","SEP","OCT","NOV","DEC"
-];
-
-const daysOfWeek = ["M","T","W","Th","F","Sa","Su"];
-
-const CalendarGrid = ({ onDateSelect }) => {
+const CalendarGrid = ({ events, onDateSelect }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedDateLocal, setSelectedDateLocal] = useState(null);
 
-  const getDaysInMonth = (date) => new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
-  const getFirstDayOfMonth = (date) => new Date(date.getFullYear(), date.getMonth(), 1).getDay();
+  const months = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+  const weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const today = new Date();
 
-  const prevMonth = () =>
-    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
-  const nextMonth = () =>
-    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
+  const getDaysInMonth = () => {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startingDayOfWeek = firstDay.getDay();
 
-  const generateCalendarDays = () => {
-    const daysInMonth = getDaysInMonth(currentDate);
-    const firstDay = getFirstDayOfMonth(currentDate);
     const days = [];
-    for (let i = 0; i < firstDay; i++) days.push(null);
-    for (let day = 1; day <= daysInMonth; day++) days.push(day);
+
+    // Previous month
+    const prevMonth = new Date(year, month - 1, 0);
+    for (let i = startingDayOfWeek - 1; i >= 0; i--) {
+      days.push({
+        day: prevMonth.getDate() - i,
+        isCurrentMonth: false,
+        date: new Date(year, month - 1, prevMonth.getDate() - i)
+      });
+    }
+
+    // Current month
+    for (let day = 1; day <= daysInMonth; day++) {
+      days.push({ day, isCurrentMonth: true, date: new Date(year, month, day) });
+    }
+
+    // Next month
+    const remainingDays = 42 - days.length;
+    for (let day = 1; day <= remainingDays; day++) {
+      days.push({ day, isCurrentMonth: false, date: new Date(year, month + 1, day) });
+    }
+
     return days;
   };
 
-  const handleDateClick = (day) => {
-    if (!day) return;
-    const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
-    setSelectedDate(date);
-    if (onDateSelect) onDateSelect(date);
+  const navigateMonth = (dir) => {
+    setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() + dir, 1));
   };
 
-  const isSelected = (date) =>
-    date.getDate() === selectedDate.getDate() &&
-    date.getMonth() === selectedDate.getMonth() &&
-    date.getFullYear() === selectedDate.getFullYear();
-
-  const isToday = (date) => {
-    const today = new Date();
-    return (
-      date.getDate() === today.getDate() &&
-      date.getMonth() === today.getMonth() &&
-      date.getFullYear() === today.getFullYear()
-    );
+  const selectDate = (date) => {
+    setSelectedDateLocal(date);
+    onDateSelect(date);
   };
 
-  const calendarDays = generateCalendarDays();
+  const hasEvents = (date) => events.some(e => {
+    const eventDate = new Date(e.start_date);
+    return eventDate.toDateString() === date.toDateString();
+  });
+
+  const days = getDaysInMonth();
 
   return (
-    <div
-      className="w-1/2 h-1/2 mx-auto flex flex-col 
-                 bg-white border border-gray-300 rounded-xl shadow-lg p-6 
-                 max-w-md sm:w-3/4 sm:h-auto"
-    >
-      {/* Month navigation */}
-      <div className="flex items-center justify-between mb-6">
-        <button
-          onClick={prevMonth}
-          className="p-2 rounded-full hover:bg-gray-200 transition-colors"
-        >
-          ◀
-        </button>
-        <div className="text-gray-800 font-semibold text-lg">
-          {months[currentDate.getMonth()]} {currentDate.getFullYear()}
+    <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">
+      {/* Header */}
+      <div className="bg-white p-6">
+        <div className="flex items-center justify-between text-white">
+          <button onClick={() => navigateMonth(-1)} className="p-2 rounded-full hover:bg-white/20">
+            &lt;
+          </button>
+          <h2 className="text-2xl font-bold">{months[currentDate.getMonth()]} {currentDate.getFullYear()}</h2>
+          <button onClick={() => navigateMonth(1)} className="p-2 rounded-full hover:bg-white/20">
+            &gt;
+          </button>
         </div>
-        <button
-          onClick={nextMonth}
-          className="p-2 rounded-full hover:bg-gray-200 transition-colors"
-        >
-          ▶
-        </button>
       </div>
 
-      {/* Days of week */}
-      <div className="grid grid-cols-7 gap-1 mb-2 flex-grow">
-        {daysOfWeek.map((day, index) => (
-          <div
-            key={index}
-            className="text-gray-600 text-sm font-medium text-center py-2"
-          >
-            {day}
-          </div>
+      {/* Weekdays */}
+      <div className="grid grid-cols-7 bg-gray-50 border-b">
+        {weekdays.map(d => (
+          <div key={d} className="p-3 text-center text-sm font-semibold text-gray-600">{d}</div>
         ))}
       </div>
 
-      {/* Calendar days */}
-      <div className="grid grid-cols-7 gap-1 flex-grow">
-        {calendarDays.map((day, index) => {
-          if (!day) return <div key={`empty-${index}`} className="h-10"></div>;
-
-          const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
-
+      {/* Days */}
+      <div className="grid grid-cols-7">
+        {days.map((dayData, idx) => {
+          const isToday = dayData.date.toDateString() === today.toDateString();
+          const isSelected = selectedDateLocal && dayData.date.toDateString() === selectedDateLocal.toDateString();
           return (
             <button
-              key={day}
-              onClick={() => handleDateClick(day)}
-              className={`h-10 rounded-full text-center transition-all duration-200 relative ${
-                isSelected(date)
-                  ? "bg-pink-500 text-white font-bold scale-105"
-                  : isToday(date)
-                  ? "bg-purple-200 text-purple-900 font-medium"
-                  : "text-gray-800 hover:bg-gray-100"
-              }`}
+              key={idx}
+              onClick={() => selectDate(dayData.date)}
+              className={`
+                relative p-4 h-16 border-r border-b border-gray-100 transition-all duration-200
+                ${dayData.isCurrentMonth ? 'hover:bg-purple-50' : 'text-gray-300 hover:bg-gray-50'}
+                ${isToday ? 'bg-gradient-to-br from-purple-100 to-indigo-100' : ''}
+                ${isSelected ? 'bg-gradient-to-br from-purple-200 to-indigo-200' : ''}
+              `}
             >
-              {day}
-              {isSelected(date) && (
-                <div className="absolute inset-0 border-2 border-pink-500 rounded-full"></div>
-              )}
+              <span className={`text-sm font-medium ${isToday ? 'text-purple-700' : dayData.isCurrentMonth ? 'text-gray-900' : 'text-gray-400'}`}>{dayData.day}</span>
+              {hasEvents(dayData.date) && <div className="absolute bottom-1 right-1 w-2 h-2 bg-purple-500 rounded-full"></div>}
             </button>
           );
         })}
@@ -118,5 +108,4 @@ const CalendarGrid = ({ onDateSelect }) => {
     </div>
   );
 };
-
 export default CalendarGrid;
