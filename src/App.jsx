@@ -13,88 +13,94 @@ import ReminderPage from "./page/ReminderPage";
 import PrivateRoute from "./components/PrivateRoute"; // <-- import it
 import TimeSheets from "./page/TimeSheets";
 import Assets from "./page/Assets"
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+const queryClient = new QueryClient();
 function App() {
   return (
     <AuthProvider>
       <ReminderProvider>
-        <Router>
-          <Routes>
-            <Route element={<Layout />}>
-              {/* Public Route */}
-              <Route path="/login" element={<LoginForm />} />
+        <QueryClientProvider client={queryClient}>
+          <Router>
+            <Routes>
+              <Route element={<Layout />}>
+                {/* Public Route */}
+                <Route path="/login" element={<LoginForm />} />
 
-              {/* Protected Routes */}
-              <Route
-                path="/"
-                element={
-                  <PrivateRoute>
-                    <Home />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/dashboard"
-                element={
-                  <PrivateRoute>
-                    <Dashboard />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/calendar"
-                element={
-                  <PrivateRoute>
-                    <CalendarPage />
-                  </PrivateRoute>
-                }
+                {/* Protected Routes */}
+                <Route
+                  path="/"
+                  element={
+                    <PrivateRoute>
+                      <Home />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/dashboard"
+                  element={
+                    <PrivateRoute>
+                      <Dashboard />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/calendar"
+                  element={
+                    <PrivateRoute>
+                      <CalendarPage />
+                    </PrivateRoute>
+                  }
                 />
 
-              <Route
-                path="/Assets"
-                element={
-                  <PrivateRoute>
-                    <Assets />
-                  </PrivateRoute>
-                }
+                <Route
+                  path="/Assets"
+                  element={
+                    <PrivateRoute>
+                      <Assets />
+                    </PrivateRoute>
+                  }
                 />
-              <Route
-                path="/events"
-                element={
-                  <PrivateRoute>
-                    <Eventsuser />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/timesheets"
-                element={
-                  <PrivateRoute>
-                    <TimeSheets />
-                  </PrivateRoute>
-                }
+                <Route
+                  path="/events"
+                  element={
+                    <PrivateRoute>
+                      <Eventsuser />
+                    </PrivateRoute>
+                  }
                 />
-               
+                <Route
+                  path="/timesheets"
+                  element={
+                    <PrivateRoute>
+                      <TimeSheets />
+                    </PrivateRoute>
+                  }
+                />
 
 
-              <Route
-                path="/eventspage"
-                element={
-                  <PrivateRoute>
-                    <Eventpage />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/reminders"
-                element={
-                  <PrivateRoute>
-                    <ReminderPage />
-                  </PrivateRoute>
-                }
-              />
-            </Route>
-          </Routes>
-        </Router>
+
+                <Route
+                  path="/eventspage"
+                  element={
+                    <PrivateRoute>
+                      <Eventpage />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/reminders"
+                  element={
+                    <PrivateRoute>
+                      <ReminderPage />
+                    </PrivateRoute>
+                  }
+                />
+              </Route>
+            </Routes>
+          </Router>
+        </QueryClientProvider>
+
       </ReminderProvider>
     </AuthProvider>
   );

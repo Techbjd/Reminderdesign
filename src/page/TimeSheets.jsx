@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useCallback, useMemo } from 'react'
 import {
   useReactTable,
   createColumnHelper,
@@ -24,6 +24,7 @@ import API from '../api/axios'
 import * as XLSX from 'xlsx'
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
+import useAttendanceLogs from '../Hooks/useAttendanceLogs'
 
 const columnHelper = createColumnHelper()
 
@@ -114,40 +115,20 @@ const exportOptions = [
 ]
 
 export default function TimeSheets() {
-  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 })
-  const [data, setData] = useState([])
-  const [totalRows, setTotalRows] = useState(0)
-  const [startDate, setStartDate] = useState('')
-  const [endDate, setEndDate] = useState('')
-  const [showFilter, setShowFilter] = useState(false)
-  const [showExportDropdown, setShowExportDropdown] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
+  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [showFilter, setShowFilter] = useState(false);
+  const [showExportDropdown, setShowExportDropdown] = useState(false);
+  const { data, isLoading, isError, error } = useAttendanceLogs({
+    startDate,
+    endDate,
+    pagination,
+  });
 
-  const tableData = Array.isArray(data) ? data : []
-  const totalPages = Math.ceil(totalRows / pagination.pageSize) || 1
-
-  // Fetch data
-  useEffect(() => {
-    async function fetchData() {
-      setIsLoading(true)
-      try {
-        const res = await API.get(
-          `/api/timesheets/attendencelogs/?start_date=${startDate}&end_date=${endDate}&page=${pagination.pageIndex + 1}&page_size=${pagination.pageSize}`
-      )
-        const apiData = res.data
-        setData(apiData.data || [])
-        setTotalRows(apiData.count || apiData.data.length)
-      } catch (error) {
-        console.error('Error fetching data:', error)
-        setData([])
-        setTotalRows(0)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-    fetchData()
-  }, [pagination.pageIndex, pagination.pageSize, startDate, endDate])
-
+const tableData = useMemo(() => data?.rows || [], [data?.rows]);
+  const totalRows = data?.total || 0;
+  const totalPages = Math.ceil(totalRows / pagination.pageSize) || 1;
   // React Table
   const table = useReactTable({
     data: tableData,
